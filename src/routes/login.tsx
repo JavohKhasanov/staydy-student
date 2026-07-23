@@ -1,9 +1,16 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Phone, Lock } from "lucide-react";
+import { Phone, Lock, Loader2 } from "lucide-react";
+
+import { ApiError } from "@/lib/api";
+import { isAuthed, setSession } from "@/lib/auth";
+import { login as apiLogin } from "@/lib/resources";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: () => {
+    if (isAuthed()) throw redirect({ to: "/" });
+  },
   head: () => ({
     meta: [
       { title: "Kirish — Staydy" },
@@ -29,21 +36,31 @@ function Login() {
   const [phone, setPhone] = useState("+998 ");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 12) {
       setErr("Telefon raqamini to'liq kiriting");
       return;
     }
-    if (password.length < 4) {
-      setErr("Parol juda qisqa");
+    if (password.length < 1) {
+      setErr("Parolni kiriting");
       return;
     }
     setErr(null);
-    toast.success("Xush kelibsiz!");
-    setTimeout(() => navigate({ to: "/" }), 400);
+    setBusy(true);
+    try {
+      const res = await apiLogin(digits, password);
+      setSession(res.accessToken, res.student);
+      toast.success("Xush kelibsiz!");
+      navigate({ to: "/" });
+    } catch (e2) {
+      setErr(e2 instanceof ApiError ? e2.message : "Kirishda xatolik");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -98,8 +115,10 @@ function Login() {
 
           <button
             type="submit"
-            className="press flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-primary to-primary-glow py-3.5 font-display font-bold text-primary-foreground shadow-glow"
+            disabled={busy}
+            className="press flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-glow py-3.5 font-display font-bold text-primary-foreground shadow-glow disabled:opacity-70"
           >
+            {busy && <Loader2 className="size-4 animate-spin" />}
             Kirish
           </button>
 
