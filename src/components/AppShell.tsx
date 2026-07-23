@@ -22,9 +22,12 @@ function TopBar() {
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-hairline bg-background/85 px-5 py-3.5 backdrop-blur-xl">
       <Link to="/" className="flex items-center gap-2 press">
-        <div className="grid size-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-primary-glow font-display text-lg font-bold text-primary-foreground shadow-glow">
-          S
-        </div>
+        <img
+          src="/logo.png"
+          alt="Staydy"
+          className="size-9 rounded-xl bg-white object-contain p-0.5 shadow-glow"
+          onError={(e) => (e.currentTarget.style.display = "none")}
+        />
         <span className="font-display text-lg font-bold tracking-tight">Staydy</span>
       </Link>
       <div className="flex items-center gap-2.5">

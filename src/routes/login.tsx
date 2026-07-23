@@ -70,12 +70,14 @@ function Login() {
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[420px] flex-col justify-center">
         <div className="mb-8 text-center">
           {logoOk ? (
-            <img
-              src="/logo.png"
-              alt="Staydy"
-              onError={() => setLogoOk(false)}
-              className="mx-auto mb-4 size-16 rounded-2xl object-contain shadow-glow"
-            />
+            <div className="mx-auto mb-5 w-fit rounded-3xl bg-white p-3 shadow-glow">
+              <img
+                src="/logo.png"
+                alt="Staydy"
+                onError={() => setLogoOk(false)}
+                className="size-24 object-contain"
+              />
+            </div>
           ) : (
             <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow font-display text-3xl font-bold text-primary-foreground shadow-glow">
               S
