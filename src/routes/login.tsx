@@ -37,6 +37,8 @@ function Login() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Real logo from /public/logo.png (or .svg); falls back to the "S" mark if the file is absent.
+  const [logoOk, setLogoOk] = useState(true);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,9 +69,18 @@ function Login() {
     <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,#2C2447_0%,#171226_60%)] px-5 py-10">
       <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-[420px] flex-col justify-center">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow font-display text-3xl font-bold text-primary-foreground shadow-glow">
-            S
-          </div>
+          {logoOk ? (
+            <img
+              src="/logo.png"
+              alt="Staydy"
+              onError={() => setLogoOk(false)}
+              className="mx-auto mb-4 size-16 rounded-2xl object-contain shadow-glow"
+            />
+          ) : (
+            <div className="mx-auto mb-4 grid size-16 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow font-display text-3xl font-bold text-primary-foreground shadow-glow">
+              S
+            </div>
+          )}
           <h1 className="font-display text-3xl font-bold tracking-tight">Xush kelibsiz</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             O'quv sarguzashtingizni davom ettiring.
