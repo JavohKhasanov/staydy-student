@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, AlertTriangle } from "lucide-react";
-import { invoices, payments, type InvoiceStatus } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
+import { getFinance, type InvoiceStatus } from "@/lib/resources";
 import { formatSum, formatDateUz } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/tolovlar")({
@@ -21,8 +22,19 @@ const invStatus: Record<InvoiceStatus, { label: string; cls: string }> = {
 };
 
 function Payments() {
-  const totalDebt = invoices.reduce((s, i) => s + (i.amount - i.paidAmount), 0);
+  const finQ = useQuery({ queryKey: ["finance"], queryFn: getFinance });
+  const invoices = finQ.data?.invoices ?? [];
+  const payments = finQ.data?.payments ?? [];
+  const totalDebt = finQ.data?.balance ?? 0;
   const debtInvoices = invoices.filter((i) => i.amount > i.paidAmount);
+
+  if (finQ.isLoading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="size-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-4">
@@ -74,9 +86,10 @@ function Payments() {
             >
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div>
-                  <p className="font-display font-bold">{inv.courseName}</p>
+                  <p className="font-display font-bold">{inv.note || inv.period || "To'lov"}</p>
                   <p className="text-[11px] text-muted-foreground tabular">
-                    {inv.period} · Muddat: {formatDateUz(inv.dueDate)}
+                    {inv.period}
+                    {inv.dueDate ? ` · Muddat: ${formatDateUz(inv.dueDate)}` : ""}
                   </p>
                 </div>
                 <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${s.cls}`}>
@@ -104,7 +117,7 @@ function Payments() {
         {payments.map((p) => (
           <div key={p.id} className="flex items-center justify-between rounded-2xl border border-hairline bg-surface p-4">
             <div>
-              <p className="text-sm font-semibold">{p.courseName}</p>
+              <p className="text-sm font-semibold">To'lov</p>
               <p className="text-[11px] text-muted-foreground tabular">
                 {formatDateUz(p.paidAt)} · {p.method}
               </p>

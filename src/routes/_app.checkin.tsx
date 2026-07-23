@@ -1,7 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ChevronLeft, Sparkles } from "lucide-react";
+import { ApiError } from "@/lib/api";
+import { checkin as apiCheckin } from "@/lib/resources";
 
 export const Route = createFileRoute("/_app/checkin")({
   head: () => ({
@@ -18,20 +21,29 @@ const obstacles = ["Vaqt yetishmasligi", "Mavzu qiyin", "Motivatsiya past", "Sha
 
 function CheckIn() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [motivation, setMotivation] = useState(0);
   const [progress, setProgress] = useState(0);
   const [obstacle, setObstacle] = useState("");
   const [comment, setComment] = useState("");
   const [done, setDone] = useState(false);
 
+  const m = useMutation({
+    mutationFn: () => apiCheckin({ motivation, progress, obstacle, comment }),
+    onSuccess: () => {
+      setDone(true);
+      qc.invalidateQueries({ queryKey: ["me"] });
+      setTimeout(() => navigate({ to: "/" }), 1600);
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Xatolik"),
+  });
+
   const submit = () => {
     if (!motivation || !progress) {
       toast.error("Motivatsiya va progress darajasini tanlang");
       return;
     }
-    setDone(true);
-    toast.success("Rahmat! Fikringiz muhim 💜", { description: "+50 🪙 kumush qo'shildi" });
-    setTimeout(() => navigate({ to: "/" }), 1400);
+    m.mutate();
   };
 
   if (done) {
@@ -44,7 +56,7 @@ function CheckIn() {
         <p className="mt-2 max-w-xs text-sm text-muted-foreground">
           Keyingi hafta yana ko'rishguncha. Har hafta o'sish davom etadi.
         </p>
-        <p className="num mt-4 font-display text-xl font-bold text-reward">+50 🪙</p>
+        <p className="num mt-4 font-display text-xl font-bold text-reward">Kumush qo'shildi 🪙</p>
       </div>
     );
   }
@@ -128,9 +140,10 @@ function CheckIn() {
 
       <button
         onClick={submit}
-        className="press flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-glow py-4 font-display font-bold text-primary-foreground shadow-glow"
+        disabled={m.isPending}
+        className="press flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-glow py-4 font-display font-bold text-primary-foreground shadow-glow disabled:opacity-70"
       >
-        Yakunlash · +50 🪙
+        {m.isPending ? "Yuborilmoqda…" : "Yakunlash"}
       </button>
     </div>
   );

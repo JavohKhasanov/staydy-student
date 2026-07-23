@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Bell, ChevronRight, LogOut, Moon, Palette, Shield, User as UserIcon } from "lucide-react";
-import { student } from "@/lib/mock-data";
-import { formatCoins, formatDateUz } from "@/lib/format";
+import { useQuery } from "@tanstack/react-query";
+import { Bell, ChevronRight, LogOut } from "lucide-react";
+import { clearSession } from "@/lib/auth";
+import { getMe } from "@/lib/resources";
+import { formatCoins } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/profil")({
   head: () => ({
@@ -15,12 +17,13 @@ export const Route = createFileRoute("/_app/profil")({
 
 function Profile() {
   const navigate = useNavigate();
-  const items = [
-    { icon: Shield, label: "Parolni o'zgartirish", to: "#" },
-    { icon: Palette, label: "Tema", value: "Avto", to: "#" },
-    { icon: Bell, label: "Bildirishnomalar", to: "/bildirishnomalar" as const },
-    { icon: Moon, label: "Til", value: "O'zbek", to: "#" },
-  ];
+  const meQ = useQuery({ queryKey: ["me"], queryFn: getMe });
+  const me = meQ.data;
+
+  const logout = () => {
+    clearSession();
+    navigate({ to: "/login" });
+  };
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-4">
@@ -30,45 +33,38 @@ function Profile() {
       <div className="animate-card-rise rounded-[24px] border border-hairline bg-gradient-to-br from-elevated to-surface p-5">
         <div className="flex items-center gap-4">
           <div className="grid size-16 place-items-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow font-display text-2xl font-bold text-primary-foreground shadow-glow">
-            {student.fullName.split(" ").map((p) => p[0]).join("")}
+            {(me?.name ?? "?").split(" ").map((p) => p[0]).slice(0, 2).join("")}
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="font-display text-lg font-bold">{student.fullName}</h2>
-            <p className="text-xs text-muted-foreground tabular">{student.phone}</p>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              {formatDateUz(student.joinedAt)} dan a'zo
-            </p>
+            <h2 className="font-display text-lg font-bold">{me?.name ?? "…"}</h2>
+            <p className="text-xs text-muted-foreground tabular">{me?.phone}</p>
+            {me?.groupName && <p className="mt-1 text-[11px] text-muted-foreground">{me.groupName}</p>}
           </div>
         </div>
 
         <div className="mt-5 grid grid-cols-3 gap-3">
-          <Stat label="Bosqich" value={String(student.level)} />
-          <Stat label="Kumush" value={formatCoins(student.coins)} accent="text-reward" />
-          <Stat label="Streak" value={`${student.streakDays} kun`} accent="text-alert" />
+          <Stat label="Bosqich" value={String(me?.level ?? 1)} />
+          <Stat label="Kumush" value={formatCoins(me?.coins ?? 0)} accent="text-reward" />
+          <Stat label="XP" value={formatCoins(me?.xp ?? 0)} accent="text-primary" />
         </div>
       </div>
 
       {/* Settings */}
       <section className="space-y-2">
-        {items.map((it, i) => (
-          <Link
-            key={it.label}
-            to={it.to as string}
-            className="press animate-card-rise flex items-center gap-3 rounded-2xl border border-hairline bg-surface p-4"
-            style={{ animationDelay: `${i * 40}ms` }}
-          >
-            <div className="grid size-9 place-items-center rounded-xl bg-elevated text-muted-foreground">
-              <it.icon className="size-4" />
-            </div>
-            <span className="flex-1 text-sm font-semibold">{it.label}</span>
-            {it.value && <span className="text-xs text-muted-foreground">{it.value}</span>}
-            <ChevronRight className="size-4 text-muted-foreground" />
-          </Link>
-        ))}
+        <Link
+          to="/bildirishnomalar"
+          className="press animate-card-rise flex items-center gap-3 rounded-2xl border border-hairline bg-surface p-4"
+        >
+          <div className="grid size-9 place-items-center rounded-xl bg-elevated text-muted-foreground">
+            <Bell className="size-4" />
+          </div>
+          <span className="flex-1 text-sm font-semibold">Bildirishnomalar</span>
+          <ChevronRight className="size-4 text-muted-foreground" />
+        </Link>
       </section>
 
       <button
-        onClick={() => navigate({ to: "/login" })}
+        onClick={logout}
         className="press flex w-full items-center justify-center gap-2 rounded-2xl border border-alert/30 bg-alert/10 py-3.5 font-semibold text-alert"
       >
         <LogOut className="size-4" /> Chiqish

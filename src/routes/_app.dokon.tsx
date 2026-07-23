@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Check, Lock } from "lucide-react";
-import { shopItems as initial, student } from "@/lib/mock-data";
+import { Check, Loader2, Lock } from "lucide-react";
+import { ApiError } from "@/lib/api";
+import { buyItem, getMe, getShop } from "@/lib/resources";
 import { formatCoins } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/dokon")({
@@ -16,16 +17,25 @@ export const Route = createFileRoute("/_app/dokon")({
 });
 
 function Shop() {
-  const [items, setItems] = useState(initial);
-  const [coins, setCoins] = useState(student.coins);
+  const qc = useQueryClient();
+  const meQ = useQuery({ queryKey: ["me"], queryFn: getMe });
+  const shopQ = useQuery({ queryKey: ["shop"], queryFn: getShop });
+  const items = shopQ.data ?? [];
+  const coins = meQ.data?.coins ?? 0;
 
-  const buy = (id: string) => {
-    const item = items.find((i) => i.id === id);
-    if (!item || item.owned || coins < item.price) return;
-    setCoins((c) => c - item.price);
-    setItems((arr) => arr.map((i) => (i.id === id ? { ...i, owned: true } : i)));
-    toast.success(`${item.name} sotib olindi!`, { description: `-${item.price} 🪙` });
-  };
+  const buyM = useMutation({
+    mutationFn: (id: string) => buyItem(id),
+    onSuccess: (_d, id) => {
+      const item = items.find((i) => i.id === id);
+      toast.success(`${item?.name ?? "Mahsulot"} sotib olindi!`, {
+        description: item ? `-${item.price} 🪙` : undefined,
+      });
+      qc.invalidateQueries({ queryKey: ["shop"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Xatolik"),
+  });
+  const buy = (id: string) => buyM.mutate(id);
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-4">

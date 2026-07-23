@@ -1,50 +1,47 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { ChevronRight } from "lucide-react";
-import { groups } from "@/lib/mock-data";
-import { formatDateUz } from "@/lib/format";
+import { useQuery } from "@tanstack/react-query";
+import { ChevronRight, Clock, Loader2 } from "lucide-react";
+import { getGroups } from "@/lib/resources";
 
 export const Route = createFileRoute("/_app/guruhlar")({
   head: () => ({
     meta: [
       { title: "Guruhlarim — Staydy" },
-      { name: "description", content: "Faol va tugagan guruhlaringiz." },
+      { name: "description", content: "Guruhlaringiz va darslar." },
     ],
   }),
   component: Groups,
 });
 
+const DAY_UZ: Record<string, string> = {
+  mon: "Du", tue: "Se", wed: "Ch", thu: "Pa", fri: "Ju", sat: "Sh", sun: "Ya",
+};
+const days = (s?: string) =>
+  (s ?? "")
+    .split(/[,\s]+/)
+    .filter(Boolean)
+    .map((d) => DAY_UZ[d] ?? d)
+    .join(" · ");
+
 function Groups() {
-  const [tab, setTab] = useState<"active" | "finished">("active");
-  const filtered = groups.filter((g) => g.status === tab);
+  const groupsQ = useQuery({ queryKey: ["groups"], queryFn: getGroups });
+  const list = groupsQ.data ?? [];
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-4">
       <h1 className="font-display text-2xl font-bold tracking-tight">Guruhlarim</h1>
 
-      <div className="flex rounded-2xl border border-hairline bg-surface p-1">
-        {(
-          [
-            { k: "active", label: "Faol" },
-            { k: "finished", label: "Tugagan" },
-          ] as const
-        ).map((t) => (
-          <button
-            key={t.k}
-            onClick={() => setTab(t.k)}
-            className={`flex-1 rounded-xl py-2 text-sm font-semibold transition-colors ${
-              tab === t.k ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        {filtered.map((g, i) => {
-          const pct = Math.round((g.lessonsDone / g.lessonsTotal) * 100);
-          return (
+      {groupsQ.isLoading ? (
+        <div className="flex justify-center py-16">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : list.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-hairline bg-surface/50 p-8 text-center">
+          <p className="text-sm text-muted-foreground">Hali guruh yo'q.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {list.map((g, i) => (
             <Link
               key={g.id}
               to="/guruhlar/$groupId"
@@ -52,42 +49,32 @@ function Groups() {
               className="press animate-card-rise block rounded-[22px] border border-hairline bg-surface p-5"
               style={{ animationDelay: `${i * 60}ms` }}
             >
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                    {g.direction}
-                  </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  {g.direction && (
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                      {g.direction}
+                    </p>
+                  )}
                   <h3 className="mt-0.5 font-display text-lg font-bold">{g.name}</h3>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {g.teacher.name} · {formatDateUz(g.startDate)} dan
-                  </p>
+                  {(g.scheduleDays || g.startTime) && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+                      {days(g.scheduleDays)}
+                      {g.startTime && (
+                        <>
+                          <Clock className="size-3" /> {g.startTime}
+                          {g.endTime ? `–${g.endTime}` : ""}
+                        </>
+                      )}
+                    </p>
+                  )}
                 </div>
                 <ChevronRight className="mt-1 size-5 shrink-0 text-muted-foreground" />
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="h-2 flex-1 overflow-hidden rounded-full bg-elevated">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-primary to-primary-glow transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-                <span className="num text-xs font-bold text-muted-foreground">
-                  {g.lessonsDone}/{g.lessonsTotal}
-                </span>
-              </div>
             </Link>
-          );
-        })}
-
-        {filtered.length === 0 && (
-          <div className="rounded-2xl border border-dashed border-hairline bg-surface/50 p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {tab === "active" ? "Faol guruh yo'q." : "Tugagan guruh yo'q."}
-            </p>
-          </div>
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

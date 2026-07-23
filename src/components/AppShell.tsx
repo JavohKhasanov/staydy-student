@@ -1,7 +1,8 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Bell, Home, MessageCircle, Trophy, User, Users } from "lucide-react";
 import { type ReactNode } from "react";
-import { notifications, student } from "@/lib/mock-data";
+import { getFinance, getHomework, getMe } from "@/lib/resources";
 import { formatCoins } from "@/lib/format";
 
 const tabs = [
@@ -13,7 +14,11 @@ const tabs = [
 ] as const;
 
 function TopBar() {
-  const unread = notifications.filter((n) => !n.read).length;
+  const meQ = useQuery({ queryKey: ["me"], queryFn: getMe });
+  const hwQ = useQuery({ queryKey: ["homework"], queryFn: getHomework });
+  const finQ = useQuery({ queryKey: ["finance"], queryFn: getFinance });
+  const pending = (hwQ.data ?? []).filter((a) => a.status === "").length;
+  const unread = pending + ((finQ.data?.balance ?? 0) > 0 ? 1 : 0);
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-hairline bg-background/85 px-5 py-3.5 backdrop-blur-xl">
       <Link to="/" className="flex items-center gap-2 press">
@@ -28,7 +33,7 @@ function TopBar() {
           className="press flex items-center gap-1.5 rounded-full border border-hairline bg-surface px-3 py-1.5"
         >
           <span className="grid size-4 place-items-center rounded-full bg-reward text-[10px]">🪙</span>
-          <span className="num font-display text-sm font-bold text-reward">{formatCoins(student.coins)}</span>
+          <span className="num font-display text-sm font-bold text-reward">{formatCoins(meQ.data?.coins ?? 0)}</span>
         </Link>
         <Link
           to="/bildirishnomalar"
