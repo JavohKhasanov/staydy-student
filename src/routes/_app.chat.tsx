@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Send, Sparkles } from "lucide-react";
 
+import { sendChat } from "@/lib/resources";
+
 export const Route = createFileRoute("/_app/chat")({
   head: () => ({
     meta: [
@@ -23,16 +25,10 @@ const initial: Msg[] = [
   {
     id: "m1",
     role: "bot",
-    text: "Salom, Aziza! 👋 Men Staydy Yordamchiman. Bugun qanday kayfiyatdasiz? Kurs qanday ketyapti?",
+    text: "Salom! 👋 Men Staydy Yordamchiman. O'qish, motivatsiya yoki reja bo'yicha savolingiz bo'lsa, yozing.",
     chips: ["Yaxshi ketyapti", "Qiynalyapman", "Vaqt yetmayapti"],
   },
 ];
-
-const replies: Record<string, string> = {
-  "Yaxshi ketyapti": "Zo'r! Shu ruhda davom eting 🔥 Reytingda #3 o'ringizga chiqishga oz qoldi. Bugun 15 daqiqa qo'shimcha vazifa qilsangiz, +30 XP olasiz.",
-  "Qiynalyapman": "Buni aytganingiz uchun rahmat 🙏 Aynan qaysi mavzu qiyin? Men sizga qo'shimcha manba topib beraman va o'qituvchingizga bildirishimni xohlaysizmi?",
-  "Vaqt yetmayapti": "Tushunaman. Keling, birga rejalashtiraylik — kuniga atigi 25 daqiqa ham katta farq qiladi. Sizga eng qulay vaqt qaysi?",
-};
 
 function Chat() {
   const [messages, setMessages] = useState<Msg[]>(initial);
@@ -44,20 +40,25 @@ function Chat() {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
 
-  const send = (text: string) => {
-    if (!text.trim()) return;
+  const send = async (text: string) => {
+    if (!text.trim() || typing) return;
     const userMsg: Msg = { id: crypto.randomUUID(), role: "user", text };
+    // History for the model: prior turns before this message (role: user | assistant).
+    const history = messages.map((m) => ({ role: m.role === "bot" ? "assistant" : "user", text: m.text }));
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setTyping(true);
-    setTimeout(() => {
-      const answer = replies[text] ?? "Rahmat! Sizni tushundim. Bu ma'lumot sizga yordam berish uchun juda muhim. Yana boshqa nima haqida gaplashamiz?";
+    try {
+      const { reply } = await sendChat(text, history);
+      setMessages((m) => [...m, { id: crypto.randomUUID(), role: "bot", text: reply }]);
+    } catch {
       setMessages((m) => [
         ...m,
-        { id: crypto.randomUUID(), role: "bot", text: answer },
+        { id: crypto.randomUUID(), role: "bot", text: "Ulanishda xatolik. Qaytadan urinib ko'ring." },
       ]);
+    } finally {
       setTyping(false);
-    }, 900);
+    }
   };
 
   return (

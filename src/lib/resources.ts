@@ -144,3 +144,9 @@ export interface StudentExam {
   score: number;
 }
 export const getExams = () => apiFetch<StudentExam[]>("/student/exams");
+
+export const sendChat = (message: string, history: { role: string; text: string }[]) =>
+  apiFetch<{ reply: string }>("/student/chat", {
+    method: "POST",
+    body: JSON.stringify({ message, history }),
+  });
