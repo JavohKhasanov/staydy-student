@@ -1,9 +1,25 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Bell, Home, MessageCircle, Trophy, User, Users } from "lucide-react";
-import { type ReactNode } from "react";
-import { getFinance, getHomework, getMe } from "@/lib/resources";
+import { useEffect, type ReactNode } from "react";
+import { getFinance, getHomework, getMe, linkTelegram } from "@/lib/resources";
 import { formatCoins } from "@/lib/format";
+
+// useTelegramBind sends the Mini App initData to the backend once per session so the bot can push
+// notifications to this student. No-op outside Telegram (no initData) or if already done.
+function useTelegramBind() {
+  useEffect(() => {
+    if (sessionStorage.getItem("tg_bound")) return;
+    const initData = (window as unknown as { Telegram?: { WebApp?: { initData?: string } } })
+      .Telegram?.WebApp?.initData;
+    if (!initData) return;
+    linkTelegram(initData)
+      .then(() => sessionStorage.setItem("tg_bound", "1"))
+      .catch(() => {
+        /* not fatal — student can still use the app; retry next session */
+      });
+  }, []);
+}
 
 const tabs = [
   { to: "/", label: "Bosh sahifa", icon: Home, exact: true },
@@ -91,6 +107,7 @@ function BottomTabs() {
 }
 
 export function AppShell({ children }: { children?: ReactNode }) {
+  useTelegramBind();
   return (
     <div className="relative min-h-screen w-full bg-[radial-gradient(ellipse_at_top,#2C2447_0%,#171226_60%)]">
       <div className="mx-auto flex min-h-screen w-full max-w-[460px] flex-col bg-background shadow-[0_0_80px_-20px_rgba(109,93,246,0.35)] md:my-6 md:min-h-[calc(100vh-3rem)] md:rounded-[32px] md:ring-1 md:ring-white/5">

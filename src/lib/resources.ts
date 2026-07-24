@@ -128,3 +128,10 @@ export const changePassword = (currentPassword: string, newPassword: string) =>
     method: "PUT",
     body: JSON.stringify({ currentPassword, newPassword }),
   });
+
+// Bind the student's Telegram (from Mini App initData) so the bot can push notifications to them.
+export const linkTelegram = (initData: string) =>
+  apiFetch<void>("/student/telegram-link", {
+    method: "POST",
+    body: JSON.stringify({ initData }),
+  });
