@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronRight, Clock, Loader2 } from "lucide-react";
 import { getGroups } from "@/lib/resources";
 
-export const Route = createFileRoute("/_app/guruhlar")({
+export const Route = createFileRoute("/_app/guruhlar/")({
   head: () => ({
     meta: [
       { title: "Guruhlarim — Staydy" },

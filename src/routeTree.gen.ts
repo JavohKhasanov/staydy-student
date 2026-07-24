@@ -15,11 +15,11 @@ import { Route as AppIndexRouteImport } from './routes/_app.index'
 import { Route as AppTolovlarRouteImport } from './routes/_app.tolovlar'
 import { Route as AppReytingRouteImport } from './routes/_app.reyting'
 import { Route as AppProfilRouteImport } from './routes/_app.profil'
-import { Route as AppGuruhlarRouteImport } from './routes/_app.guruhlar'
 import { Route as AppDokonRouteImport } from './routes/_app.dokon'
 import { Route as AppCheckinRouteImport } from './routes/_app.checkin'
 import { Route as AppChatRouteImport } from './routes/_app.chat'
 import { Route as AppBildirishnomalarRouteImport } from './routes/_app.bildirishnomalar'
+import { Route as AppGuruhlarIndexRouteImport } from './routes/_app.guruhlar.index'
 import { Route as AppGuruhlarGroupIdRouteImport } from './routes/_app.guruhlar.$groupId'
 import { Route as AppDarslarLessonIdRouteImport } from './routes/_app.darslar.$lessonId'
 
@@ -52,11 +52,6 @@ const AppProfilRoute = AppProfilRouteImport.update({
   path: '/profil',
   getParentRoute: () => AppRoute,
 } as any)
-const AppGuruhlarRoute = AppGuruhlarRouteImport.update({
-  id: '/guruhlar',
-  path: '/guruhlar',
-  getParentRoute: () => AppRoute,
-} as any)
 const AppDokonRoute = AppDokonRouteImport.update({
   id: '/dokon',
   path: '/dokon',
@@ -77,10 +72,15 @@ const AppBildirishnomalarRoute = AppBildirishnomalarRouteImport.update({
   path: '/bildirishnomalar',
   getParentRoute: () => AppRoute,
 } as any)
+const AppGuruhlarIndexRoute = AppGuruhlarIndexRouteImport.update({
+  id: '/guruhlar/',
+  path: '/guruhlar/',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppGuruhlarGroupIdRoute = AppGuruhlarGroupIdRouteImport.update({
-  id: '/$groupId',
-  path: '/$groupId',
-  getParentRoute: () => AppGuruhlarRoute,
+  id: '/guruhlar/$groupId',
+  path: '/guruhlar/$groupId',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppDarslarLessonIdRoute = AppDarslarLessonIdRouteImport.update({
   id: '/darslar/$lessonId',
@@ -95,12 +95,12 @@ export interface FileRoutesByFullPath {
   '/chat': typeof AppChatRoute
   '/checkin': typeof AppCheckinRoute
   '/dokon': typeof AppDokonRoute
-  '/guruhlar': typeof AppGuruhlarRouteWithChildren
   '/profil': typeof AppProfilRoute
   '/reyting': typeof AppReytingRoute
   '/tolovlar': typeof AppTolovlarRoute
   '/darslar/$lessonId': typeof AppDarslarLessonIdRoute
   '/guruhlar/$groupId': typeof AppGuruhlarGroupIdRoute
+  '/guruhlar/': typeof AppGuruhlarIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -108,13 +108,13 @@ export interface FileRoutesByTo {
   '/chat': typeof AppChatRoute
   '/checkin': typeof AppCheckinRoute
   '/dokon': typeof AppDokonRoute
-  '/guruhlar': typeof AppGuruhlarRouteWithChildren
   '/profil': typeof AppProfilRoute
   '/reyting': typeof AppReytingRoute
   '/tolovlar': typeof AppTolovlarRoute
   '/': typeof AppIndexRoute
   '/darslar/$lessonId': typeof AppDarslarLessonIdRoute
   '/guruhlar/$groupId': typeof AppGuruhlarGroupIdRoute
+  '/guruhlar': typeof AppGuruhlarIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -124,13 +124,13 @@ export interface FileRoutesById {
   '/_app/chat': typeof AppChatRoute
   '/_app/checkin': typeof AppCheckinRoute
   '/_app/dokon': typeof AppDokonRoute
-  '/_app/guruhlar': typeof AppGuruhlarRouteWithChildren
   '/_app/profil': typeof AppProfilRoute
   '/_app/reyting': typeof AppReytingRoute
   '/_app/tolovlar': typeof AppTolovlarRoute
   '/_app/': typeof AppIndexRoute
   '/_app/darslar/$lessonId': typeof AppDarslarLessonIdRoute
   '/_app/guruhlar/$groupId': typeof AppGuruhlarGroupIdRoute
+  '/_app/guruhlar/': typeof AppGuruhlarIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,12 +141,12 @@ export interface FileRouteTypes {
     | '/chat'
     | '/checkin'
     | '/dokon'
-    | '/guruhlar'
     | '/profil'
     | '/reyting'
     | '/tolovlar'
     | '/darslar/$lessonId'
     | '/guruhlar/$groupId'
+    | '/guruhlar/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -154,13 +154,13 @@ export interface FileRouteTypes {
     | '/chat'
     | '/checkin'
     | '/dokon'
-    | '/guruhlar'
     | '/profil'
     | '/reyting'
     | '/tolovlar'
     | '/'
     | '/darslar/$lessonId'
     | '/guruhlar/$groupId'
+    | '/guruhlar'
   id:
     | '__root__'
     | '/_app'
@@ -169,13 +169,13 @@ export interface FileRouteTypes {
     | '/_app/chat'
     | '/_app/checkin'
     | '/_app/dokon'
-    | '/_app/guruhlar'
     | '/_app/profil'
     | '/_app/reyting'
     | '/_app/tolovlar'
     | '/_app/'
     | '/_app/darslar/$lessonId'
     | '/_app/guruhlar/$groupId'
+    | '/_app/guruhlar/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -227,13 +227,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProfilRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/guruhlar': {
-      id: '/_app/guruhlar'
-      path: '/guruhlar'
-      fullPath: '/guruhlar'
-      preLoaderRoute: typeof AppGuruhlarRouteImport
-      parentRoute: typeof AppRoute
-    }
     '/_app/dokon': {
       id: '/_app/dokon'
       path: '/dokon'
@@ -262,12 +255,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppBildirishnomalarRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/guruhlar/': {
+      id: '/_app/guruhlar/'
+      path: '/guruhlar'
+      fullPath: '/guruhlar/'
+      preLoaderRoute: typeof AppGuruhlarIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/guruhlar/$groupId': {
       id: '/_app/guruhlar/$groupId'
-      path: '/$groupId'
+      path: '/guruhlar/$groupId'
       fullPath: '/guruhlar/$groupId'
       preLoaderRoute: typeof AppGuruhlarGroupIdRouteImport
-      parentRoute: typeof AppGuruhlarRoute
+      parentRoute: typeof AppRoute
     }
     '/_app/darslar/$lessonId': {
       id: '/_app/darslar/$lessonId'
@@ -279,29 +279,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AppGuruhlarRouteChildren {
-  AppGuruhlarGroupIdRoute: typeof AppGuruhlarGroupIdRoute
-}
-
-const AppGuruhlarRouteChildren: AppGuruhlarRouteChildren = {
-  AppGuruhlarGroupIdRoute: AppGuruhlarGroupIdRoute,
-}
-
-const AppGuruhlarRouteWithChildren = AppGuruhlarRoute._addFileChildren(
-  AppGuruhlarRouteChildren,
-)
-
 interface AppRouteChildren {
   AppBildirishnomalarRoute: typeof AppBildirishnomalarRoute
   AppChatRoute: typeof AppChatRoute
   AppCheckinRoute: typeof AppCheckinRoute
   AppDokonRoute: typeof AppDokonRoute
-  AppGuruhlarRoute: typeof AppGuruhlarRouteWithChildren
   AppProfilRoute: typeof AppProfilRoute
   AppReytingRoute: typeof AppReytingRoute
   AppTolovlarRoute: typeof AppTolovlarRoute
   AppIndexRoute: typeof AppIndexRoute
   AppDarslarLessonIdRoute: typeof AppDarslarLessonIdRoute
+  AppGuruhlarGroupIdRoute: typeof AppGuruhlarGroupIdRoute
+  AppGuruhlarIndexRoute: typeof AppGuruhlarIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -309,12 +298,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppChatRoute: AppChatRoute,
   AppCheckinRoute: AppCheckinRoute,
   AppDokonRoute: AppDokonRoute,
-  AppGuruhlarRoute: AppGuruhlarRouteWithChildren,
   AppProfilRoute: AppProfilRoute,
   AppReytingRoute: AppReytingRoute,
   AppTolovlarRoute: AppTolovlarRoute,
   AppIndexRoute: AppIndexRoute,
   AppDarslarLessonIdRoute: AppDarslarLessonIdRoute,
+  AppGuruhlarGroupIdRoute: AppGuruhlarGroupIdRoute,
+  AppGuruhlarIndexRoute: AppGuruhlarIndexRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
