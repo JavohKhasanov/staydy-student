@@ -35,11 +35,13 @@ export async function apiFetch<T>(path: string, opts: RequestInit = {}): Promise
   }
 
   if (res.status === 401) {
+    const isLogin = path.endsWith("/student/login");
     clearSession();
-    if (typeof window !== "undefined" && !path.endsWith("/student/login")) {
+    if (typeof window !== "undefined" && !isLogin) {
       window.location.href = "/login";
     }
-    throw new ApiError(401, "Telefon yoki parol noto'g'ri.");
+    // Only the login call means bad credentials; elsewhere a 401 is an expired session.
+    throw new ApiError(401, isLogin ? "Telefon yoki parol noto'g'ri." : "Sessiya tugadi — qayta kiring.");
   }
   if (!res.ok) {
     let detail = "Xatolik yuz berdi. Qaytadan urinib ko'ring.";

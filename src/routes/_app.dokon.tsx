@@ -35,7 +35,11 @@ function Shop() {
     },
     onError: (e) => toast.error(e instanceof ApiError ? e.message : "Xatolik"),
   });
-  const buy = (id: string) => buyM.mutate(id);
+  // Guard against a double-tap firing two purchases before the refetch flips `owned`.
+  const buy = (id: string) => {
+    if (buyM.isPending) return;
+    buyM.mutate(id);
+  };
 
   return (
     <div className="space-y-5 px-5 pb-8 pt-4">
@@ -68,7 +72,7 @@ function Shop() {
                 🪙 {formatCoins(item.price)}
               </p>
               <button
-                disabled={item.owned || !affordable}
+                disabled={item.owned || !affordable || buyM.isPending}
                 onClick={() => buy(item.id)}
                 className={`press flex w-full items-center justify-center gap-1 rounded-xl py-2 text-xs font-bold ${
                   item.owned
