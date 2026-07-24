@@ -13,14 +13,26 @@ export class ApiError extends Error {
 // into an ApiError with the backend's Uzbek `detail`. A 401 clears the session and bounces to login.
 export async function apiFetch<T>(path: string, opts: RequestInit = {}): Promise<T> {
   const token = getToken();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...opts,
-    headers: {
-      "content-type": "application/json",
-      ...(token ? { authorization: `Bearer ${token}` } : {}),
-      ...(opts.headers || {}),
-    },
-  });
+  // fetch has no built-in timeout: a busy/hung server would leave the request pending forever,
+  // freezing the screen on a loading state. Abort after 15s so it fails fast instead.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 15_000);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      ...opts,
+      signal: controller.signal,
+      headers: {
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+        ...(opts.headers || {}),
+      },
+    });
+  } catch {
+    throw new ApiError(0, "Ulanish sekin yoki uzildi. Qaytadan urinib ko'ring.");
+  } finally {
+    clearTimeout(timer);
+  }
 
   if (res.status === 401) {
     clearSession();
