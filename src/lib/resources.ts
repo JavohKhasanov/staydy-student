@@ -135,3 +135,12 @@ export const linkTelegram = (initData: string) =>
     method: "POST",
     body: JSON.stringify({ initData }),
   });
+
+export interface StudentExam {
+  examId: string;
+  title: string;
+  examDate?: string;
+  maxScore: number;
+  score: number;
+}
+export const getExams = () => apiFetch<StudentExam[]>("/student/exams");

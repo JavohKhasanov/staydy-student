@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, Filter, Loader2 } from "lucide-react";
-import { getGroups, getHomework, type HomeworkStatus } from "@/lib/resources";
+import { getExams, getGroups, getHomework, type HomeworkStatus } from "@/lib/resources";
 import { formatDateUz } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/guruhlar/$groupId")({
@@ -29,6 +29,8 @@ function GroupDetail() {
   const [filter, setFilter] = useState<FilterKey>("all");
   const groupsQ = useQuery({ queryKey: ["groups"], queryFn: getGroups });
   const hwQ = useQuery({ queryKey: ["homework"], queryFn: getHomework });
+  const examsQ = useQuery({ queryKey: ["exams"], queryFn: getExams });
+  const exams = examsQ.data ?? [];
 
   const group = (groupsQ.data ?? []).find((g) => g.id === groupId);
   const assignments = (hwQ.data ?? []).filter((a) => a.groupId === groupId);
@@ -111,6 +113,26 @@ function GroupDetail() {
               <p className="text-sm text-muted-foreground">Vazifa yo'q.</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Exams */}
+      {exams.length > 0 && (
+        <div className="space-y-2">
+          <h2 className="font-display text-lg font-bold">Imtihonlar</h2>
+          {exams.map((e) => (
+            <div key={e.examId} className="flex items-center justify-between rounded-[20px] border border-hairline bg-surface p-4">
+              <div className="min-w-0">
+                <h3 className="truncate font-display font-bold">{e.title}</h3>
+                {e.examDate && (
+                  <p className="text-[11px] text-muted-foreground tabular">{formatDateUz(e.examDate)}</p>
+                )}
+              </div>
+              <span className="shrink-0 rounded-full bg-primary/15 px-3 py-1 text-sm font-bold text-primary tabular">
+                {e.score}<span className="text-muted-foreground">/{e.maxScore}</span>
+              </span>
+            </div>
+          ))}
         </div>
       )}
     </div>
