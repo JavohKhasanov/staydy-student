@@ -122,3 +122,9 @@ export const buyItem = (itemId: string) =>
 
 export const getLeaderboard = (groupId?: string) =>
   apiFetch<LeaderRow[]>(`/student/leaderboard${groupId ? `?groupId=${groupId}` : ""}`);
+
+export const changePassword = (currentPassword: string, newPassword: string) =>
+  apiFetch<void>("/student/change-password", {
+    method: "PUT",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });

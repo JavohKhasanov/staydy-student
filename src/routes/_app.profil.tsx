@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Bell, ChevronRight, LogOut } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Bell, ChevronRight, KeyRound, Loader2, LogOut } from "lucide-react";
 import { clearSession } from "@/lib/auth";
-import { getMe } from "@/lib/resources";
+import { ApiError } from "@/lib/api";
+import { changePassword, getMe } from "@/lib/resources";
 import { formatCoins } from "@/lib/format";
 
 export const Route = createFileRoute("/_app/profil")({
@@ -61,6 +64,8 @@ function Profile() {
           <span className="flex-1 text-sm font-semibold">Bildirishnomalar</span>
           <ChevronRight className="size-4 text-muted-foreground" />
         </Link>
+
+        <ChangePasswordSection />
       </section>
 
       <button
@@ -69,6 +74,73 @@ function Profile() {
       >
         <LogOut className="size-4" /> Chiqish
       </button>
+    </div>
+  );
+}
+
+function ChangePasswordSection() {
+  const [open, setOpen] = useState(false);
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+
+  const m = useMutation({
+    mutationFn: () => changePassword(current, next),
+    onSuccess: () => {
+      toast.success("Parol o'zgartirildi");
+      setCurrent("");
+      setNext("");
+      setOpen(false);
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : "Xatolik yuz berdi"),
+  });
+
+  return (
+    <div className="animate-card-rise overflow-hidden rounded-2xl border border-hairline bg-surface">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="press flex w-full items-center gap-3 p-4 text-left"
+      >
+        <div className="grid size-9 place-items-center rounded-xl bg-elevated text-muted-foreground">
+          <KeyRound className="size-4" />
+        </div>
+        <span className="flex-1 text-sm font-semibold">Parolni o'zgartirish</span>
+        <ChevronRight className={`size-4 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
+      </button>
+      {open && (
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (current && next.length >= 6) m.mutate();
+          }}
+          className="space-y-3 border-t border-hairline p-4"
+        >
+          <input
+            type="password"
+            value={current}
+            onChange={(e) => setCurrent(e.target.value)}
+            placeholder="Joriy parol"
+            autoComplete="current-password"
+            className="w-full rounded-xl border border-hairline bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+          />
+          <input
+            type="password"
+            value={next}
+            onChange={(e) => setNext(e.target.value)}
+            placeholder="Yangi parol (kamida 6 belgi)"
+            minLength={6}
+            autoComplete="new-password"
+            className="w-full rounded-xl border border-hairline bg-background px-4 py-3 text-sm outline-none focus:border-primary"
+          />
+          <button
+            type="submit"
+            disabled={m.isPending || !current || next.length < 6}
+            className="press flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-glow py-3 font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {m.isPending && <Loader2 className="size-4 animate-spin" />}
+            Saqlash
+          </button>
+        </form>
+      )}
     </div>
   );
 }
